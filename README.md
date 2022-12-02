@@ -11,4 +11,4 @@ Homework 2: Tableau, D3 Graphs and Visualization
 
 Homework 3: Spark, Docker, DataBricks, AWS and GCP
 
-Homework 4: PageRank Algorithm, Random Forest, SVMs, KNN using Scikit-learn
+Homework 4: PageRank Algorithm, Random Forest, SVMs, Random Fores and PCA using Scikit-learn
