@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>Games Rating: 2015 - 2019</title>
+  <meta charset="utf-8">
+  <script type="text/javascript" src="../lib/d3.v5.min.js"></script>
+  <script type="text/javascript" src="../lib/d3-dsv.min.js"></script>
+  <script type="text/javascript" src="../lib/d3-legend.min.js"></script>
+      <style type="text/css">
+    /* 13. Basic Styling with CSS */
+
+    /* Style the lines by removing the fill and applying a stroke */
+    <style>
+      
+      .line {
+        stroke: #139AAB;
+        stroke-width: 2px;
+    }
+
+    .text { font: 17px sans-serif;
+     }
+
+
+    </style>
+
+</style>
+</head>
+
+<body>
+
+<div id="container"></div>
+
+<script>
+
+  var margin = {top: 80, right: 80, bottom: 50, left: 100},
+  width = 850 - margin.left - margin.right,
+  height = 420 - margin.top - margin.bottom;
+
+
+  var xColumn = "Rating";
+  var yColumn = "count";
+  var colorColumn = "year";
+  var lineColumn = colorColumn;
+  var color = d3.scaleOrdinal().range(d3.schemeCategory10);
+
+// Set the ranges
+var xScale = d3.scaleLinear()
+      .domain([0, 9]) // input
+      .range([0, width]); // output
+  // 6. Y scale will use the randomly generate number 
+  var yScale = d3.scaleLinear()
+      .domain([0, 700]) // input 
+      .range([height, 0]);
+
+
+
+
+// Define the line
+var valueLine = d3.line()
+    .x(function(d) {
+     return xScale(d.Ratingvalue); })
+    .y(function(d) {
+     return yScale(d.countPerRating); })
+
+var line1 = d3.line()
+    .x(function(d) {
+     return xScale(d.Ratingvalue); })
+    .y(function(d) {
+     return yScale(d.countPerRating); })
+
+// Create the svg canvas in the "graph" div
+var svg = d3.select("body")
+        .append("svg")
+        .style("width", width + margin.left + margin.right + "px")
+        .style("height", 2*(height + 1.5*margin.top + 1.5*margin.bottom) + "px") //规定画布的大小
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", 2*(height + margin.top + margin.bottom))
+        .append("g")
+        .attr("transform","translate(" + margin.left + "," + margin.top + ")")
+        .attr("class", "svg");
+
+
+  var pathToCsv = "average-rating.csv";   // path to csv
+
+  d3.dsv(",", pathToCsv, function(d) {
+    return {
+      name: d.name,
+      year: +d.year,
+      Rating: Math.floor(+d["average_rating"]),
+      Rated: +d["users_rated"],
+    }
+  }).then(function (data) {
+
+    var nested = d3.nest()
+          .key(function (d){ return d[lineColumn]; })
+          .entries(data);
+
+    var nestedUpdate = new Array();
+    var countPerYear = new Array();
+
+    for(var i=0;i<nested.length;i++){
+        if(parseInt(nested[i].key)>=2015 && parseInt(nested[i].key)<2020){
+          nestedUpdate.push(nested[i]);
+        }    
+    }
+
+for(var i=0;i<nestedUpdate.length;i++){  //对应不同的year
+  var item = new Array();
+  for (var j=0; j<10;j++){    //不同的rating
+        var detail = new Object();
+        countDetail=0;
+    for(var k=0;k<nestedUpdate[i].values.length;k++){
+            if((nestedUpdate[i].values)[k].Rating == j){
+                countDetail = countDetail+1;
+            }
+        }
+        detail.Ratingvalue = j;
+        detail.countPerRating = countDetail;
+        detail.key = nestedUpdate[i].key
+        item.push(detail);     
+      }
+       nestedUpdate[i].point = item;
+    }
+
+
+    var data2 = nestedUpdate[1]
+
+  // x.domain(d3.extent(data, function(d) { return d.Rating; }));
+  // y.domain([0, d3.max(data, function(d) { return d.Sales; })]);
+  
+  // Set up the x axis
+  svg.append("g")
+      .attr("class", "x axis")  //把它归为xaxis这一类
+      .attr("transform", "translate(0," + height + ")")
+      .call(d3.axisBottom(xScale));
+
+  // Add the Y Axis
+  svg.append("g")
+      .attr("class", "y axis")
+      .call(d3.axisLeft(yScale)); // Create an axis component with d3.axisLeft
+
+ // yaxis.select(".domain").style("display","none")
+  
+  // Add a label to the y axis
+  svg.append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 0 - 60)
+        .attr("x", 0 - (height / 2))
+        .attr("dy", "1em")
+        .style("text-anchor", "middle")
+        .text("Count")
+        .attr("class", "y axis label");
+
+    svg.append("text")
+        .attr("y", height)
+        .attr("x", width/2)
+        .attr("dy", 42)
+        .style("text-anchor", "middle")
+        .text("Rating")
+        .attr("class", "x axis label");
+  
+  svg.selectAll(".line1")
+      .data(nestedUpdate)
+      .enter()
+      .append("path")
+      .attr("fill", "none")
+      .attr("stroke-width", 1.5)
+      .attr("stroke","red")
+      .attr("class", "line1")
+      .attr("d", function(d){
+          return valueLine(d.point)})
+      .style("stroke", function(d) { return color(d.key); });
+      // .attr("opacity",0.0);
+
+
+
+
+var drawBarchart = function(key,ratingPoint){
+  var temp = nestedUpdate[parseInt(key)-2015];
+  var temp2 = new Array();
+  var temp2index = new Array();
+  var barItem = new Array();
+
+  for(var i =0;i<temp.values.length;i++){
+      if((temp.values)[i].Rating == ratingPoint){
+      temp2.push((temp.values)[i].Rated)
+      temp2index.push(i);
+    }
+  }
+  //deep copy
+  temp2orginal = new Array();
+  for(var i =0;i<temp2.length;i++){
+    temp2orginal.push(temp2[i])
+  }
+  temp2.sort(d3.descending);
+
+ for(var i=0; i<5;i++){
+      var detail = new Object();
+      detail.value = temp2[i];
+      var index = temp2index[(temp2orginal).indexOf(temp2[i])];
+      detail.name = ((temp.values)[index].name).substring(0,10);
+      barItem.push(detail);
+  }
+  
+  var names = new Array();
+  var xValue = new Array();
+  for(var i=0;i<barItem.length;i++){
+      names.push(barItem[i].name);
+      xValue.push(barItem[i].value);
+  }
+
+
+  console.log(barItem)
+ 
+
+  var padding = 30
+
+  var yScalebar = d3.scaleBand()
+    .domain(names)       // This is what is written on the Axis: from 0 to 100
+    .range([0, height])                       // This is where the axis is placed: from 100 px to 800px
+  // 6. Y scale will use the randomly generate number 
+  var xScalebar = d3.scaleLinear()
+      .domain([0, d3.max(xValue)]) // input 
+      .range([0, width]);
+
+
+    let width2 = width + margin.left + margin.right;
+    let height2 = 2*(height + margin.top + margin.bottom);
+
+    function make_x_gridlines() {   
+    return d3.axisBottom(xScalebar)
+
+  }
+
+
+    svg2 = d3.select("svg").append("svg")
+      .attr("width", width2)
+      .attr("height", height2)
+    .append("g")
+      .attr("transform", "translate(" + margin.left + "," + (height + 2*margin.top + margin.bottom) +  ")")
+      ;
+  svg2.append("g")
+      .attr("class", "x axis")  //把它归为xaxis这一类
+      .attr("transform", "translate(0," + height + ")")
+      .call(d3.axisBottom(xScalebar));
+
+      svg2.append("g")     
+      .attr("class", "grid")
+      .attr("transform", "translate(0," + height + ")")
+      .call(make_x_gridlines()
+          .tickSize(-height)
+          .tickFormat("")
+      )
+
+  svg2.append("g")
+      .attr("class", "y axis")
+      .call(d3.axisLeft(yScalebar)); // Create an axis component with d3.axisLeft
+
+  svg2.selectAll(".bar1")
+      .data(barItem)
+    .enter().append("rect")
+      .attr("class", "bar")
+      .attr("y", function(d) {
+        return yScalebar((d.name).substring(0,10))+0.5*padding; } )
+      .attr("width", function(d) { 
+        return xScalebar(d.value); })
+      .attr("height", 30)
+      .style("fill", "purple");
+
+      var title = svg2.append('text')
+        .attr('class', 'text')
+        .attr('x', width/2)
+        .attr('y', -20)
+        .text("Top 5 rated games for year "+key+" with rating "+ratingPoint.toString())
+        .style("font-size", "15")
+        .attr("dy", "-3.5")
+        .attr("text-anchor","middle");
+
+    svg2.append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 0 - 90)
+        .attr("x", 0 - (height / 2))
+        .attr("dy", "1em")
+        .style("text-anchor", "middle")
+        .text("Games")
+        .attr("class", "y axis label");
+
+    svg2.append("text")
+        .attr("y", height)
+        .attr("x", width/2)
+        .attr("dy", 42)
+        .style("text-anchor", "middle")
+        .text("Number of users")
+        .attr("class", "x axis label");
+
+
+
+
+
+  return svg2;
+
+}
+
+
+  
+  for(var i =0; i<nestedUpdate.length;i++){
+    var stringkk = ".dot"+i.toString()
+    svg.selectAll(stringkk)
+    .data(nestedUpdate[i].point)
+    .enter().append("circle") // Uses the enter().append() method
+    .attr("class", "dot") // Assign a class for styling
+    .attr("cx", function(d,i) { 
+      return xScale(d.Ratingvalue); })
+    .attr("cy", function(d,i) { 
+        return yScale(d.countPerRating); })
+    .attr("r", function(d,i) { 
+        return 3; })
+    .on("mouseover", function(d) {
+          d3.select(this)
+          .attr("r",10);
+
+          // d3.selectAll(".line1")
+          // .attr("opacity",1);
+
+          var key = d.key
+          var ratingPoint = d.Ratingvalue
+          //接下来画bar图
+          barchart = drawBarchart(key,ratingPoint);
+            })
+    .on("mouseout", function(d) {
+        d3.select(this) 
+          .attr("r", 3)
+        if( typeof barchart !== 'undefined' ){
+    barchart.selectAll("*").remove();}  
+      })
+    .style("fill", function(d) { return color(nestedUpdate[i].key); });
+    
+    
+
+  }
+
+
+
+      var legend = svg.selectAll('g2')
+        .data(nestedUpdate)
+        .enter()
+      .append('g')
+        .attr('class', 'legend');
+
+
+    
+    legend.append('circle')
+        .attr('cx', width - 20)
+        .attr('cy', function(d, i){ return i *  20;})
+        .attr('r', 7)
+        .style('fill', function(d) { 
+          return color(d.key);
+        });
+
+
+
+    legend.append('text')
+        .attr('class', 'legend')
+        .attr('x', width - 8)
+        .attr('y', function(d, i){ return (i *  20) + 9;})
+        .text(function(d){ return d.key; })
+        .style("font-size", "15")
+        .attr("dy", "-3.5");
+
+
+    var title = svg.append('text')
+        .attr('class', 'text')
+        .attr('x', width/2)
+        .attr('y', -50)
+        .text("Board games by Rating 2015-2019")
+        // .style("font-size", "125")
+        .attr("dy", "-3.5")
+        .attr("text-anchor","middle");
+
+        svg.append('text')
+        .attr('class', 'text')
+        .attr('x', width/2)
+        .attr('y', -30)
+        .text("jlu428")
+        .style("font-size", "5")
+        .attr("text-anchor","middle");
+
+
+
+
+
+
+
+
+
+
+
+
+      }
+      ).catch(function (error) {
+      console.log(error);
+    }); 
+
+	 
+
+
+
+
+</script>
+
+</body>
+
+
+</html>

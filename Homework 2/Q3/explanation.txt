@@ -1,0 +1,12 @@
+We are using the projection to project the Number of Ratings to form the y axis.
+As we can see:
+
+1. the log projection will magnify the differences when the Number of Ratings
+is small, and it will narrow the difference when the Number of Ratings
+is large.
+
+2. the square projection has the similiar effect, but the magnification and reduction
+effect is less when comcaring with log projection.
+
+(ps: magnify the differences means even though difference of two number is small, but
+in y axis the distance between them is large, and vise versus for narrow the difference)

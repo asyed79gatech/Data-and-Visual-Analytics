@@ -1,0 +1,1421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style type="text/css">
+		/* 13. Basic Styling with CSS */
+
+		/* Style the lines by removing the fill and applying a stroke */
+/*.pagebreak { page-break-before: always; }*/
+	
+	@media print {
+    .pagebreak { page-break-after: always; } }
+
+
+
+
+		.line {
+		    fill: none;
+		    stroke: #ffab00;
+		    stroke-width: 3;
+		}
+		  
+		.overlay {
+		  fill: none;
+		  pointer-events: all;
+		}
+
+		/* Style the dots by assigning a fill and stroke */
+		.dot {
+		    fill: #ffab00;
+		    stroke: #fff;
+		}
+		  
+		  .focus circle {
+		  fill: none;
+		  stroke: steelblue;
+		}
+
+		.text { font: 8px sans-serif;
+				fill: white;
+		 }
+
+</style>
+</head>
+
+<body>
+
+
+
+
+<script type="text/javascript" src="../lib/d3.v5.min.js"></script>
+<script>
+
+	// 2. Use the margin convention practice 
+	var margin = {top: 80, right: 150, bottom: 80, left: 150}
+	  , width = 1200 - margin.left - margin.right // Use the window's width 
+	  , height = 600 - margin.top - margin.bottom; // Use the window's height
+
+	var parseDate = d3.timeParse("%Y-%m-%d");
+
+	var _colors = d3.scaleOrdinal().range(d3.schemeCategory10);
+
+	var pathToCsv = "boardgame_ratings.csv";		// path to csv
+
+	d3.dsv(",", pathToCsv, function(d) {
+  	return {
+
+  	date: parseDate(d.date),
+
+    Catancount: +d["Catan=count"],
+    Catanrank: +d["Catan=rank"],
+
+    Dominioncount: +d["Dominion=count"],
+    Dominionrank: +d["Dominion=rank"],
+
+    Codenamescount: +d["Codenames=count"],
+    Codenamesrank: +d["Codenames=rank"],
+
+    TerraformingMarscount: +d["Terraforming Mars=count"],
+    TerraformingMarsrank: +d["Terraforming Mars=rank"],
+
+    Gloomhavencount: +d["Gloomhaven=count"],
+    Gloomhavenrank: +d["Gloomhaven=rank"],
+
+    MagicTheGatheringcount: +d["Magic: The Gathering=count"],
+    MagicTheGatheringrank: +d["Magic: The Gathering=rank"],
+
+    Dixitcount: +d["Dixit=count"],
+    Dixitrank: +d["Dixit=rank"],
+
+    Monopolycount: +d["Monopoly=count"],
+    Monopolyrank: +d["Monopoly=rank"],
+  	}
+	}).then(function (data) {
+
+		console.log(data)
+
+    var ymax = 0;
+    var ymin = 1000000000000000000000;
+    var ySetmax = new Array();
+    var ySetmin = new Array();
+    ySetmax.push(d3.max(data,function(d){return d.Catancount;}))
+
+    for(var n = 0; n < data.length; n++){
+        if (data[n].Catancount>ymax){
+            ymax =data[n].Catancount;
+        }
+        if (data[n].Gloomhavencount<ymin){
+            ymin =data[n].Gloomhavencount;
+        }
+    }
+
+    var xmax = 0;
+    var xmin = 1000000000000000000000;
+    for(var n = 0; n < data.length; n++){
+        if (data[n].date>xmax){
+            xmax =data[n].date;
+        }
+        if (data[n].date<xmin){
+            xmin =data[n].date;
+        }
+    }
+
+
+	n = 21;
+	// 5. X scale will use the index of our data
+	var xScale = d3.scaleTime()
+	    .domain([xmin, xmax]) // input
+	    .range([0, width]); // output
+	// 6. Y scale will use the randomly generate number 
+	var yScale = d3.scaleLinear()
+	    .domain([0, ymax]) // input 
+	    .range([height, 0]); // output 
+
+	// 7. d3's line generator
+	var line1 = d3.line()   //x坐标点的值为data数组的下标，y坐标的值为实际数组每一项的值
+	    
+	    .x(function(d) {
+	    return xScale(d.date); }) // set the x values for the line generator
+	    .y(function(d) { 
+	    return yScale(d.Catancount); }) // set the y values for the line generator 
+	    .curve(d3.curveMonotoneX) // apply smoothing to the line
+
+
+	var line2 = d3.line()   //x坐标点的值为data数组的下标，y坐标的值为实际数组每一项的值
+	    .x(function(d) {return xScale(d.date); }) // set the x values for the line generator
+	    .y(function(d) { return yScale(d.Dominioncount); }) // set the y values for the line generator 
+	    .curve(d3.curveMonotoneX)
+
+
+	var line3 = d3.line()   //x坐标点的值为data数组的下标，y坐标的值为实际数组每一项的值
+	    .x(function(d) {return xScale(d.date); }) // set the x values for the line generator
+	    .y(function(d) { return yScale(d.Codenamescount); }) // set the y values for the line generator 
+	    .curve(d3.curveMonotoneX)
+
+	var line4 = d3.line()   //x坐标点的值为data数组的下标，y坐标的值为实际数组每一项的值
+	    .x(function(d) {return xScale(d.date); }) // set the x values for the line generator
+	    .y(function(d) { return yScale(d.TerraformingMarscount); }) // set the y values for the line generator 
+	    .curve(d3.curveMonotoneX)
+
+	var line5 = d3.line()   //x坐标点的值为data数组的下标，y坐标的值为实际数组每一项的值
+	    .x(function(d) {return xScale(d.date); }) // set the x values for the line generator
+	    .y(function(d) { return yScale(d.Gloomhavencount); }) // set the y values for the line generator 
+	    .curve(d3.curveMonotoneX)
+
+
+	var line6 = d3.line()   //x坐标点的值为data数组的下标，y坐标的值为实际数组每一项的值
+	    .x(function(d) {return xScale(d.date); }) // set the x values for the line generator
+	    .y(function(d) { return yScale(d.MagicTheGatheringcount); }) // set the y values for the line generator 
+	    .curve(d3.curveMonotoneX)
+
+
+	var line7 = d3.line()   //x坐标点的值为data数组的下标，y坐标的值为实际数组每一项的值
+	    .x(function(d) {return xScale(d.date); }) // set the x values for the line generator
+	    .y(function(d) { return yScale(d.Dixitcount); }) // set the y values for the line generator 
+	    .curve(d3.curveMonotoneX)
+
+
+	var line8 = d3.line()   //x坐标点的值为data数组的下标，y坐标的值为实际数组每一项的值
+	    .x(function(d) {return xScale(d.date); }) // set the x values for the line generator
+	    .y(function(d) { return yScale(d.Monopolycount); }) // set the y values for the line generator 
+	    .curve(d3.curveMonotoneX)
+
+
+/////////////////////////////
+//接下来是square root 
+///////////////////////////////////
+	// 6. Y scale will use the randomly generate number 
+	var yScaleRoot = d3.scaleSqrt()
+	    .domain([0, ymax]) // input 
+	    .range([height, 0]); // output 
+
+	// 7. d3's line generator
+	var line1Root = d3.line()   //x坐标点的值为data数组的下标，y坐标的值为实际数组每一项的值
+	    .x(function(d) {return xScale(d.date); }) // set the x values for the line generator
+	    .y(function(d) { return yScaleRoot(d.Catancount); }) // set the y values for the line generator 
+	    .curve(d3.curveMonotoneX) // apply smoothing to the line
+
+
+	var line2Root = d3.line()   //x坐标点的值为data数组的下标，y坐标的值为实际数组每一项的值
+	    .x(function(d) {return xScale(d.date); }) // set the x values for the line generator
+	    .y(function(d) { return yScaleRoot(d.Dominioncount); }) // set the y values for the line generator 
+	    .curve(d3.curveMonotoneX)
+
+
+	var line3Root = d3.line()   //x坐标点的值为data数组的下标，y坐标的值为实际数组每一项的值
+	    .x(function(d) {return xScale(d.date); }) // set the x values for the line generator
+	    .y(function(d) { return yScaleRoot(d.Codenamescount); }) // set the y values for the line generator 
+	    .curve(d3.curveMonotoneX)
+
+	var line4Root = d3.line()   //x坐标点的值为data数组的下标，y坐标的值为实际数组每一项的值
+	    .x(function(d) {return xScale(d.date); }) // set the x values for the line generator
+	    .y(function(d) { return yScaleRoot(d.TerraformingMarscount); }) // set the y values for the line generator 
+	    .curve(d3.curveMonotoneX)
+
+	var line5Root = d3.line()   //x坐标点的值为data数组的下标，y坐标的值为实际数组每一项的值
+	    .x(function(d) {return xScale(d.date); }) // set the x values for the line generator
+	    .y(function(d) { return yScaleRoot(d.Gloomhavencount); }) // set the y values for the line generator 
+	    .curve(d3.curveMonotoneX)
+
+
+	var line6Root = d3.line()   //x坐标点的值为data数组的下标，y坐标的值为实际数组每一项的值
+	    .x(function(d) {return xScale(d.date); }) // set the x values for the line generator
+	    .y(function(d) { return yScaleRoot(d.MagicTheGatheringcount); }) // set the y values for the line generator 
+	    .curve(d3.curveMonotoneX)
+
+
+	var line7Root = d3.line()   //x坐标点的值为data数组的下标，y坐标的值为实际数组每一项的值
+	    .x(function(d) {return xScale(d.date); }) // set the x values for the line generator
+	    .y(function(d) { return yScaleRoot(d.Dixitcount); }) // set the y values for the line generator 
+	    .curve(d3.curveMonotoneX)
+
+
+	var line8Root = d3.line()   //x坐标点的值为data数组的下标，y坐标的值为实际数组每一项的值
+	    .x(function(d) {return xScale(d.date); }) // set the x values for the line generator
+	    .y(function(d) { return yScaleRoot(d.Monopolycount); }) // set the y values for the line generator 
+	    .curve(d3.curveMonotoneX)
+
+
+
+	var yScaleLog = d3.scaleLog()
+	    .domain([0.000001, ymax]) // input 
+	    .range([height, 0]); // output 
+
+	// 7. d3's line generator
+	var line1Log = d3.line()   //x坐标点的值为data数组的下标，y坐标的值为实际数组每一项的值
+	    .x(function(d) {return xScale(d.date); }) // set the x values for the line generator
+	    .y(function(d) { return yScaleLog(d.Catancount); }) // set the y values for the line generator 
+	    .curve(d3.curveMonotoneX) // apply smoothing to the line
+
+
+	var line2Log = d3.line()   //x坐标点的值为data数组的下标，y坐标的值为实际数组每一项的值
+	    .x(function(d) {return xScale(d.date); }) // set the x values for the line generator
+	    .y(function(d) { return yScaleLog(d.Dominioncount); }) // set the y values for the line generator 
+	    .curve(d3.curveMonotoneX)
+
+
+	var line3Log = d3.line()   //x坐标点的值为data数组的下标，y坐标的值为实际数组每一项的值
+	    .x(function(d) {return xScale(d.date); }) // set the x values for the line generator
+	    .y(function(d) { return yScaleLog(d.Codenamescount); }) // set the y values for the line generator 
+	    .curve(d3.curveMonotoneX)
+
+	var line4Log = d3.line()   //x坐标点的值为data数组的下标，y坐标的值为实际数组每一项的值
+	    .x(function(d) {return xScale(d.date); }) // set the x values for the line generator
+	    .y(function(d) { return yScaleLog(d.TerraformingMarscount); }) // set the y values for the line generator 
+	    .curve(d3.curveMonotoneX)
+
+	var line5Log = d3.line()   //x坐标点的值为data数组的下标，y坐标的值为实际数组每一项的值
+	    .x(function(d) {return xScale(d.date); }) // set the x values for the line generator
+	    .y(function(d) { return yScaleLog(d.Gloomhavencount); }) // set the y values for the line generator 
+	    .curve(d3.curveMonotoneX)
+
+
+	var line6Log = d3.line()   //x坐标点的值为data数组的下标，y坐标的值为实际数组每一项的值
+	    .x(function(d) {return xScale(d.date); }) // set the x values for the line generator
+	    .y(function(d) { return yScaleLog(d.MagicTheGatheringcount); }) // set the y values for the line generator 
+	    .curve(d3.curveMonotoneX)
+
+
+	var line7Log = d3.line()   //x坐标点的值为data数组的下标，y坐标的值为实际数组每一项的值
+	    .x(function(d) {return xScale(d.date); }) // set the x values for the line generator
+	    .y(function(d) { return yScaleLog(d.Dixitcount); }) // set the y values for the line generator 
+	    .curve(d3.curveMonotoneX)
+
+
+	var line8Log = d3.line()   //x坐标点的值为data数组的下标，y坐标的值为实际数组每一项的值
+	    .x(function(d) {return xScale(d.date); }) // set the x values for the line generator
+	    .y(function(d) { return yScaleLog(d.Monopolycount); }) // set the y values for the line generator 
+	    .curve(d3.curveMonotoneX)
+
+
+
+
+	// 8. An array of objects of length N. Each object has key -> value pair, the key being "y" and the value is a random number
+	
+	// 1. Add the SVG to the page and employ #2
+
+
+	var svg = d3.select("body").append("svg")
+		.attr("id","svg-a")
+		.attr("class", "svg")  //把它归为xaxis这一类
+		.attr("class", "pagebreak")
+	    .attr("width", width + margin.left + margin.right)
+	    .attr("height", height + margin.top + margin.bottom)
+          .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+
+      svg.append("text")
+      .text("Number of Ratings 2016-2020")
+      .attr("text-anchor","middle")//字体尾部对齐
+      .attr("y",-40)//沿y轴平移一个字体的大小
+      .attr("x",width/2+20)
+     
+
+ plot_a = svg.append("g")
+       .attr("id", "plot-a")
+       
+
+	// 3. Call the x axis in a group tag
+	x_axis_a = plot_a.append("g")
+	    .attr("class", "x axis")  //把它归为xaxis这一类
+	    .attr("transform", "translate(0," + height + ")")
+	    .call(d3.axisBottom(xScale).tickFormat(d3.timeFormat("%b,%y")));
+          .attr("id", "x-axis-a")
+          x_axis_a.append("text")
+          .text("Month")
+          .attr("text-anchor","middle")//字体尾部对齐
+          .attr("y",height+40)//沿y轴平移一个字体的大小
+          .attr("x",width/2)
+
+
+	// 4. Call the y axis in a group tag
+	y_axis_a = plot_a.append("g")
+	    .attr("class", "y axis")
+	    .call(d3.axisLeft(yScale)); // Create an axis component with d3.axisLeft
+          .attr("id", "y-axis-a")
+          y_axis_a.append("text")
+      .text("Num of Ratings")
+      .attr("transform","rotate(-90)")//text旋转-90°
+      .attr("text-anchor","middle")//字体尾部对齐
+      .attr("y",-60)//沿y轴平移一个字体的大小
+      .attr("x","-200")
+
+
+
+	// 9. Append the path, bind the data, and call the line generator 
+	    Lines_a = plot_a.append("g")
+          .attr("id", "lines-a")
+         Lines_a.append("path") //path可以绘制任何图形
+	    .datum(data) // 10. Binds data to the line 
+	    .attr("class", "line") // Assign a class for styling 
+	    .attr("d", line1)
+	    .style("stroke", _colors(0)); 
+	Lines_a.append("text")
+		.attr("transform", "translate(" + (width+3) + "," + yScale(data[data.length-1].Catancount) + ")")
+		.attr("dy", ".35em")
+		.attr("text-anchor", "start")
+		.style("fill", _colors(0))
+		.text("Catan");
+
+	Lines_a.append("path") //path可以绘制任何图形
+	    .datum(data) // 10. Binds data to the line 
+	    .attr("class", "line") // Assign a class for styling 
+	    .attr("d", line2) // d决定pen在画布上怎么走，line变量定义了
+		.style("stroke", _colors(1)); 
+	Lines_a.append("text")
+		.attr("transform", "translate(" + (width+3) + "," + yScale(data[data.length-1].Dominioncount) + ")")
+		.attr("dy", ".35em")
+		.attr("text-anchor", "start")
+		.style("fill", _colors(1))
+		.text("Dominion");
+
+	Lines_a.append("path") 
+	    .datum(data) 
+	    .attr("class", "line") 
+	    .attr("d", line3)
+		.style("stroke", _colors(2));
+	Lines_a.append("text")
+		.attr("transform", "translate(" + (width+3) + "," + yScale(data[data.length-1].Codenamescount) + ")")
+		.attr("dy", ".35em")
+		.attr("text-anchor", "start")
+		.style("fill", _colors(2))
+		.text("Codenames"); 
+
+	Lines_a.append("path") 
+	    .datum(data) 
+	    .attr("class", "line") 
+	    .attr("d", line4)
+	    .style("stroke", _colors(3));
+	Lines_a.append("text")
+		.attr("transform", "translate(" + (width+3) + "," + yScale(data[data.length-1].TerraformingMarscount) + ")")
+		.attr("dy", ".35em")
+		.attr("text-anchor", "start")
+		.style("fill", _colors(3))
+		.text("Terraforming Mars");  
+
+	Lines_a.append("path") 
+	    .datum(data) 
+	    .attr("class", "line") 
+	    .attr("d", line5)
+	    .style("stroke", _colors(4)); 
+	Lines_a.append("text")
+		.attr("transform", "translate(" + (width+3) + "," + yScale(data[data.length-1].Gloomhavencount) + ")")
+		.attr("dy", ".35em")
+		.attr("text-anchor", "start")
+		.style("fill", _colors(4))
+		.text("Gloomhaven");  
+
+	Lines_a.append("path") 
+	    .datum(data) 
+	    .attr("class", "line") 
+	    .attr("d", line6)
+	    .style("stroke", _colors(5));
+	Lines_a.append("text")
+		.attr("transform", "translate(" + (width+3) + "," + yScale(data[data.length-1].MagicTheGatheringcount) + ")")
+		.attr("dy", ".35em")
+		.attr("text-anchor", "start")
+		.style("fill", _colors(5))
+		.text("Magic: The Gathering"); 	 
+
+	Lines_a.append("path") 
+	    .datum(data) 
+	    .attr("class", "line") 
+	    .attr("d", line7)
+	    .style("stroke", _colors(6));
+	Lines_a.append("text")
+		.attr("transform", "translate(" + (width+3) + "," + yScale(data[data.length-1].Dixitcount) + ")")
+		.attr("dy", ".35em")
+		.attr("text-anchor", "start")
+		.style("fill", _colors(6))
+		.text("Dixit");  
+
+	Lines_a.append("path") 
+	    .datum(data) 
+	    .attr("class", "line") 
+	    .attr("d", line8)
+	    .style("stroke", _colors(7))
+	Lines_a.append("text")
+		.attr("transform", "translate(" + (width+3) + "," + yScale(data[data.length-1].Monopolycount) + ")")
+		.attr("dy", ".35em")
+		.attr("text-anchor", "start")
+		.style("fill", _colors(7))
+		.text("Monopoly"); 
+
+	
+
+
+//////////////////////////////
+//Next SVG
+//////////////////////////////
+
+    var svg2 = d3.select("body").append("svg")
+    .attr("id","area2")
+    .attr("class", "svg2")  //把它归为xaxis这一类
+    .attr("class", "pagebreak")
+	    .attr("width", width + margin.left + margin.right)
+	    .attr("height", 1*(height + margin.top + margin.bottom))
+	  .append("g")
+	    .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+	    ;
+
+	// 3. Call the x axis in a group tag
+	svg2.append("g")
+	    .attr("class", "x axis")  //把它归为xaxis这一类
+	    .attr("transform", "translate(0," + height + ")")
+	    .call(d3.axisBottom(xScale).tickFormat(d3.timeFormat("%b,%y")));
+	
+	    //call的里面必须是函数，svg.append("g").call(axis) = axis(svg.append(g))，和group对象绑定
+
+	// 4. Call the y axis in a group tag
+	svg2.append("g")
+	    .attr("class", "y axis")
+	    .call(d3.axisLeft(yScale)); // Create an axis component with d3.axisLeft
+
+	// 9. Append the path, bind the data, and call the line generator 
+	
+	svg2.append("path") //path可以绘制任何图形
+	    .datum(data) // 10. Binds data to the line 
+	    .attr("class", "line") // Assign a class for styling 
+	    .attr("d", line1)
+	    .style("stroke", _colors(0)); 
+	svg2.append("text")
+		.attr("transform", "translate(" + (width+3) + "," + yScale(data[data.length-1].Catancount) + ")")
+		.attr("dy", ".35em")
+		.attr("text-anchor", "start")
+		.style("fill", _colors(0))
+		.text("Catan");
+
+	svg2.append("path") //path可以绘制任何图形
+	    .datum(data) // 10. Binds data to the line 
+	    .attr("class", "line") // Assign a class for styling 
+	    .attr("d", line2) // d决定pen在画布上怎么走，line变量定义了
+		.style("stroke", _colors(1)); 
+	svg2.append("text")
+		.attr("transform", "translate(" + (width+3) + "," + yScale(data[data.length-1].Dominioncount) + ")")
+		.attr("dy", ".35em")
+		.attr("text-anchor", "start")
+		.style("fill", _colors(1))
+		.text("Dominion");
+
+	svg2.append("path") 
+	    .datum(data) 
+	    .attr("class", "line") 
+	    .attr("d", line3)
+		.style("stroke", _colors(2));
+	svg2.append("text")
+		.attr("transform", "translate(" + (width+3) + "," + yScale(data[data.length-1].Codenamescount) + ")")
+		.attr("dy", ".35em")
+		.attr("text-anchor", "start")
+		.style("fill", _colors(2))
+		.text("Codenames"); 
+
+	svg2.append("path") 
+	    .datum(data) 
+	    .attr("class", "line") 
+	    .attr("d", line4)
+	    .style("stroke", _colors(3));
+	svg2.append("text")
+		.attr("transform", "translate(" + (width+3) + "," + yScale(data[data.length-1].TerraformingMarscount) + ")")
+		.attr("dy", ".35em")
+		.attr("text-anchor", "start")
+		.style("fill", _colors(3))
+		.text("Terraforming Mars");  
+
+	svg2.append("path") 
+	    .datum(data) 
+	    .attr("class", "line") 
+	    .attr("d", line5)
+	    .style("stroke", _colors(4)); 
+	svg2.append("text")
+		.attr("transform", "translate(" + (width+3) + "," + yScale(data[data.length-1].Gloomhavencount) + ")")
+		.attr("dy", ".35em")
+		.attr("text-anchor", "start")
+		.style("fill", _colors(4))
+		.text("Gloomhaven");  
+
+	svg2.append("path") 
+	    .datum(data) 
+	    .attr("class", "line") 
+	    .attr("d", line6)
+	    .style("stroke", _colors(5));
+	svg2.append("text")
+		.attr("transform", "translate(" + (width+3) + "," + yScale(data[data.length-1].MagicTheGatheringcount) + ")")
+		.attr("dy", ".35em")
+		.attr("text-anchor", "start")
+		.style("fill", _colors(5))
+		.text("Magic: The Gathering"); 	 
+
+	svg2.append("path") 
+	    .datum(data) 
+	    .attr("class", "line") 
+	    .attr("d", line7)
+	    .style("stroke", _colors(6));
+	svg2.append("text")
+		.attr("transform", "translate(" + (width+3) + "," + yScale(data[data.length-1].Dixitcount) + ")")
+		.attr("dy", ".35em")
+		.attr("text-anchor", "start")
+		.style("fill", _colors(6))
+		.text("Dixit");  
+
+	svg2.append("path") 
+	    .datum(data) 
+	    .attr("class", "line") 
+	    .attr("d", line8)
+	    .style("stroke", _colors(7))
+	svg2.append("text")
+		.attr("transform", "translate(" + (width+3) + "," + yScale(data[data.length-1].Monopolycount) + ")")
+		.attr("dy", ".35em")
+		.attr("text-anchor", "start")
+		.style("fill", _colors(7))
+		.text("Monopoly"); 
+
+	svg2.append("g")
+      .append("text")
+      .text("Num of Ratings")
+      .attr("transform","rotate(-90)")//text旋转-90°
+      .attr("text-anchor","middle")//字体尾部对齐
+      .attr("y",-60)//沿y轴平移一个字体的大小
+      .attr("x","-200")
+
+
+    svg2.append("g")
+      .append("text")
+      .text("Month")
+      .attr("text-anchor","middle")//字体尾部对齐
+      .attr("y",height+40)//沿y轴平移一个字体的大小
+      .attr("x",width/2)
+
+    svg2.append("g")
+      .append("text")
+      .text("Num of Ratings 2016-2020 with Rankings")
+      .attr("text-anchor","middle")//字体尾部对齐
+      .attr("y",-40)//沿y轴平移一个字体的大小
+      .attr("x",width/2+20)
+
+	svg2.selectAll(".dot")
+    .data(data)
+  	.enter().append("circle") // Uses the enter().append() method
+    .attr("class", "dot") // Assign a class for styling
+    .attr("cx", function(d,i) { 
+    	if (i%3==2 ){
+    	return xScale(d.date);} })
+    .attr("cy", function(d,i) { 
+    	if (i%3==2 ){
+    		return yScale(d.Catancount);} })
+    .attr("r", function(d,i) { 
+    	if (i%3==2 ){
+    		return 10;} })
+    .style("fill", _colors(0))
+
+
+    svg2.selectAll(".text")
+    .data(data)
+  	.enter().append("text")
+  	.attr("class", "text")
+  	.text(function(d,i){
+  		if (i%3==2 ){
+    	return (d.Catanrank).toString();} })
+	.attr("text-anchor","middle")//字体尾部对齐
+    .attr("x", function(d,i) { 
+    	if (i%3==2 ){
+    	return xScale(d.date);} })
+    .attr("y", function(d,i) { 
+    	if (i%3==2 ){
+    		return yScale(d.Catancount);} })
+    .style("font", "4px")
+    .attr("dy", "+3.5")
+
+
+
+	svg2.selectAll(".dot2")
+    .data(data)
+  	.enter().append("circle") // Uses the enter().append() method
+    .attr("class", "dot") // Assign a class for styling
+    .attr("cx", function(d,i) { 
+    	if (i%3==2 ){
+    	return xScale(d.date);} })
+    .attr("cy", function(d,i) { 
+    	if (i%3==2 ){
+    		return yScale(d.Codenamescount);} })
+    .attr("r", function(d,i) { 
+    	if (i%3==2 ){
+    		return 10;} })
+    .style("fill", _colors(2))
+
+
+    svg2.selectAll(".text2")
+    .data(data)
+  	.enter().append("text")
+  	.attr("class", "text")
+  	.text(function(d,i){
+  		if (i%3==2 ){
+    	return (d.Codenamesrank).toString();} })
+	.attr("text-anchor","middle")//字体尾部对齐
+    .attr("x", function(d,i) { 
+    	if (i%3==2 ){
+    	return xScale(d.date);} })
+    .attr("y", function(d,i) { 
+    	if (i%3==2 ){
+    		return yScale(d.Codenamescount);} })
+    .style("font", "4px")
+    .attr("dy", "+3.5")
+
+	svg2.selectAll(".dot3")
+    .data(data)
+  	.enter().append("circle") // Uses the enter().append() method
+    .attr("class", "dot") // Assign a class for styling
+    .attr("cx", function(d,i) { 
+    	if (i%3==2 ){
+    	return xScale(d.date);} })
+    .attr("cy", function(d,i) { 
+    	if (i%3==2 ){
+    		return yScale(d.TerraformingMarscount);} })
+    .attr("r", function(d,i) { 
+    	if (i%3==2 ){
+    		return 10;} })
+    .style("fill", _colors(3))
+
+
+    svg2.selectAll(".text3")
+    .data(data)
+  	.enter().append("text")
+  	.attr("class", "text")
+  	.text(function(d,i){
+  		if (i%3==2 ){
+    	return (d.TerraformingMarsrank).toString();} })
+	.attr("text-anchor","middle")//字体尾部对齐
+    .attr("x", function(d,i) { 
+    	if (i%3==2 ){
+    	return xScale(d.date);} })
+    .attr("y", function(d,i) { 
+    	if (i%3==2 ){
+    		return yScale(d.TerraformingMarscount);} })
+    .style("font", "4px")
+    .attr("dy", "+3.5")
+
+	svg2.selectAll(".dot4")
+    .data(data)
+  	.enter().append("circle") // Uses the enter().append() method
+    .attr("class", "dot") // Assign a class for styling
+    .attr("cx", function(d,i) { 
+    	if (i%3==2 ){
+    	return xScale(d.date);} })
+    .attr("cy", function(d,i) { 
+    	if (i%3==2 ){
+    		return yScale(d.Gloomhavencount);} })
+    .attr("r", function(d,i) { 
+    	if (i%3==2 ){
+    		return 10;} })
+    .style("fill", _colors(4))
+
+    svg2.selectAll(".text4")
+    .data(data)
+  	.enter().append("text")
+  	.attr("class", "text")
+  	.text(function(d,i){
+  		if (i%3==2 ){
+    	return (d.Gloomhavenrank).toString();} })
+	.attr("text-anchor","middle")//字体尾部对齐
+    .attr("x", function(d,i) { 
+    	if (i%3==2 ){
+    	return xScale(d.date);} })
+    .attr("y", function(d,i) { 
+    	if (i%3==2 ){
+    		return yScale(d.Gloomhavencount);} })
+    .style("font", "4px")
+    .attr("dy", "+3.5")
+
+    svg2.append("g")
+      .append("circle")
+      .attr("cx", width+margin.right/2)
+      .attr("cy", height)
+      .attr("r", 10)
+
+    svg2.append("g")
+      .append("text")
+      .attr("class", "text")
+      .attr("x", width+margin.right/2)
+      .attr("y", height)
+      .text("rank")
+      .attr("class", "text")
+	  .attr("dx", "-8")
+	  .attr("dy", "+3")
+
+svg2.append("g")
+      .append("text")
+      .attr("class", "text")
+      .attr("x", width+margin.right/2)
+      .attr("y", height)
+      .text("BoardGameGeek Rank")
+      .attr("class", "text")
+	  .attr("dx", "-40")
+	  .attr("dy", "+30")
+	  .style("fill", "black")
+	  .style('font-weight', 'bold')
+
+
+
+//////////////////////////////////////
+// SVG3
+//////////////////////////////////////	
+
+
+
+
+var svg3 = d3.select("body").append("svg")
+.attr("id","area3")
+.attr("class", "svg3")  //把它归为xaxis这一类\
+.attr("class", "pagebreak")
+	    .attr("width", width + margin.left + margin.right)
+	    .attr("height", 1*(height + margin.top + margin.bottom))
+	  .append("g")
+	    .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+	    ;
+
+	// 3. Call the x axis in a group tag
+	svg3.append("g")
+	    .attr("class", "x axis")  //把它归为xaxis这一类
+	    .attr("transform", "translate(0," + height + ")")
+	    .call(d3.axisBottom(xScale).tickFormat(d3.timeFormat("%b,%y")));
+	
+	    //call的里面必须是函数，svg.append("g").call(axis) = axis(svg.append(g))，和group对象绑定
+
+	// 4. Call the y axis in a group tag
+	svg3.append("g")
+	    .attr("class", "y axis")
+	    .call(d3.axisLeft(yScaleRoot)); // Create an axis component with d3.axisLeft
+
+	// 9. Append the path, bind the data, and call the line generator 
+	svg3.append("path") //path可以绘制任何图形
+	    .datum(data) // 10. Binds data to the line 
+	    .attr("class", "line") // Assign a class for styling 
+	    .attr("d", line1Root)
+	    .style("stroke", _colors(0)); 
+	svg3.append("text")
+		.attr("transform", "translate(" + (width+3) + "," + yScaleRoot(data[data.length-1].Catancount) + ")")
+		.attr("dy", ".35em")
+		.attr("text-anchor", "start")
+		.style("fill", _colors(0))
+		.text("Catan");
+
+	svg3.append("path") //path可以绘制任何图形
+	    .datum(data) // 10. Binds data to the line 
+	    .attr("class", "line") // Assign a class for styling 
+	    .attr("d", line2Root) // d决定pen在画布上怎么走，line变量定义了
+		.style("stroke", _colors(1)); 
+	svg3.append("text")
+		.attr("transform", "translate(" + (width+3) + "," + yScaleRoot(data[data.length-1].Dominioncount) + ")")
+		.attr("dy", ".35em")
+		.attr("text-anchor", "start")
+		.style("fill", _colors(1))
+		.text("Dominion");
+
+	svg3.append("path") 
+	    .datum(data) 
+	    .attr("class", "line") 
+	    .attr("d", line3Root)
+		.style("stroke", _colors(2));
+	svg3.append("text")
+		.attr("transform", "translate(" + (width+3) + "," + yScaleRoot(data[data.length-1].Codenamescount) + ")")
+		.attr("dy", ".35em")
+		.attr("text-anchor", "start")
+		.style("fill", _colors(2))
+		.text("Codenames"); 
+
+	svg3.append("path") 
+	    .datum(data) 
+	    .attr("class", "line") 
+	    .attr("d", line4Root)
+	    .style("stroke", _colors(3));
+	svg3.append("text")
+		.attr("transform", "translate(" + (width+3) + "," + yScaleRoot(data[data.length-1].TerraformingMarscount) + ")")
+		.attr("dy", ".35em")
+		.attr("text-anchor", "start")
+		.style("fill", _colors(3))
+		.text("Terraforming Mars");  
+
+	svg3.append("path") 
+	    .datum(data) 
+	    .attr("class", "line") 
+	    .attr("d", line5Root)
+	    .style("stroke", _colors(4)); 
+	svg3.append("text")
+		.attr("transform", "translate(" + (width+3) + "," + yScaleRoot(data[data.length-1].Gloomhavencount) + ")")
+		.attr("dy", ".35em")
+		.attr("text-anchor", "start")
+		.style("fill", _colors(4))
+		.text("Gloomhaven");  
+
+	svg3.append("path") 
+	    .datum(data) 
+	    .attr("class", "line") 
+	    .attr("d", line6Root)
+	    .style("stroke", _colors(5));
+	svg3.append("text")
+		.attr("transform", "translate(" + (width+3) + "," + yScaleRoot(data[data.length-1].MagicTheGatheringcount) + ")")
+		.attr("dy", ".35em")
+		.attr("text-anchor", "start")
+		.style("fill", _colors(5))
+		.text("Magic: The Gathering"); 	 
+
+	svg3.append("path") 
+	    .datum(data) 
+	    .attr("class", "line") 
+	    .attr("d", line7Root)
+	    .style("stroke", _colors(6));
+	svg3.append("text")
+		.attr("transform", "translate(" + (width+3) + "," + yScaleRoot(data[data.length-1].Dixitcount) + ")")
+		.attr("dy", ".35em")
+		.attr("text-anchor", "start")
+		.style("fill", _colors(6))
+		.text("Dixit");  
+
+	svg3.append("path") 
+	    .datum(data) 
+	    .attr("class", "line") 
+	    .attr("d", line8Root)
+	    .style("stroke", _colors(7))
+	svg3.append("text")
+		.attr("transform", "translate(" + (width+3) + "," + yScaleRoot(data[data.length-1].Monopolycount) + ")")
+		.attr("dy", ".35em")
+		.attr("text-anchor", "start")
+		.style("fill", _colors(7))
+		.text("Monopoly"); 
+
+	svg3.append("g")
+      .append("text")
+      .text("Num of Ratings")
+      .attr("transform","rotate(-90)")//text旋转-90°
+      .attr("text-anchor","middle")//字体尾部对齐
+      .attr("y",-60)//沿y轴平移一个字体的大小
+      .attr("x","-200")
+
+
+    svg3.append("g")
+      .append("text")
+      .text("Month")
+      .attr("text-anchor","middle")//字体尾部对齐
+      .attr("y",height+40)//沿y轴平移一个字体的大小
+      .attr("x",width/2)
+
+    svg3.append("g")
+      .append("text")
+      .text("Num of Ratings 2016-2020 with Rankings")
+      .attr("text-anchor","middle")//字体尾部对齐
+      .attr("y",-40)//沿y轴平移一个字体的大小
+      .attr("x",width/2+20)
+
+	svg3.selectAll(".dot")
+    .data(data)
+  	.enter().append("circle") // Uses the enter().append() method
+    .attr("class", "dot") // Assign a class for styling
+    .attr("cx", function(d,i) { 
+    	if (i%3==2 ){
+    	return xScale(d.date);} })
+    .attr("cy", function(d,i) { 
+    	if (i%3==2 ){
+    		return yScaleRoot(d.Catancount);} })
+    .attr("r", function(d,i) { 
+    	if (i%3==2 ){
+    		return 10;} })
+    .style("fill", _colors(0))
+
+
+    svg3.selectAll(".text")
+    .data(data)
+  	.enter().append("text")
+  	.attr("class", "text")
+  	.text(function(d,i){
+  		if (i%3==2 ){
+    	return (d.Catanrank).toString();} })
+	.attr("text-anchor","middle")//字体尾部对齐
+    .attr("x", function(d,i) { 
+    	if (i%3==2 ){
+    	return xScale(d.date);} })
+    .attr("y", function(d,i) { 
+    	if (i%3==2 ){
+    		return yScaleRoot(d.Catancount);} })
+    .style("font", "4px")
+    .attr("dy", "+3.5")
+
+
+
+	svg3.selectAll(".dot2")
+    .data(data)
+  	.enter().append("circle") // Uses the enter().append() method
+    .attr("class", "dot") // Assign a class for styling
+    .attr("cx", function(d,i) { 
+    	if (i%3==2 ){
+    	return xScale(d.date);} })
+    .attr("cy", function(d,i) { 
+    	if (i%3==2 ){
+    		return yScaleRoot(d.Codenamescount);} })
+    .attr("r", function(d,i) { 
+    	if (i%3==2 ){
+    		return 10;} })
+    .style("fill", _colors(2))
+
+
+    svg3.selectAll(".text2")
+    .data(data)
+  	.enter().append("text")
+  	.attr("class", "text")
+  	.text(function(d,i){
+  		if (i%3==2 ){
+    	return (d.Codenamesrank).toString();} })
+	.attr("text-anchor","middle")//字体尾部对齐
+    .attr("x", function(d,i) { 
+    	if (i%3==2 ){
+    	return xScale(d.date);} })
+    .attr("y", function(d,i) { 
+    	if (i%3==2 ){
+    		return yScaleRoot(d.Codenamescount);} })
+    .style("font", "4px")
+    .attr("dy", "+3.5")
+
+	svg3.selectAll(".dot3")
+    .data(data)
+  	.enter().append("circle") // Uses the enter().append() method
+    .attr("class", "dot") // Assign a class for styling
+    .attr("cx", function(d,i) { 
+    	if (i%3==2 ){
+    	return xScale(d.date);} })
+    .attr("cy", function(d,i) { 
+    	if (i%3==2 ){
+    		return yScaleRoot(d.TerraformingMarscount);} })
+    .attr("r", function(d,i) { 
+    	if (i%3==2 ){
+    		return 10;} })
+    .style("fill", _colors(3))
+
+
+    svg3.selectAll(".text3")
+    .data(data)
+  	.enter().append("text")
+  	.attr("class", "text")
+  	.text(function(d,i){
+  		if (i%3==2 ){
+    	return (d.TerraformingMarsrank).toString();} })
+	.attr("text-anchor","middle")//字体尾部对齐
+    .attr("x", function(d,i) { 
+    	if (i%3==2 ){
+    	return xScale(d.date);} })
+    .attr("y", function(d,i) { 
+    	if (i%3==2 ){
+    		return yScaleRoot(d.TerraformingMarscount);} })
+    .style("font", "4px")
+    .attr("dy", "+3.5")
+
+	svg3.selectAll(".dot4")
+    .data(data)
+  	.enter().append("circle") // Uses the enter().append() method
+    .attr("class", "dot") // Assign a class for styling
+    .attr("cx", function(d,i) { 
+    	if (i%3==2 ){
+    	return xScale(d.date);} })
+    .attr("cy", function(d,i) { 
+    	if (i%3==2 ){
+    		return yScaleRoot(d.Gloomhavencount);} })
+    .attr("r", function(d,i) { 
+    	if (i%3==2 ){
+    		return 10;} })
+    .style("fill", _colors(4))
+
+    svg3.selectAll(".text4")
+    .data(data)
+  	.enter().append("text")
+  	.attr("class", "text")
+  	.text(function(d,i){
+  		if (i%3==2 ){
+    	return (d.Gloomhavenrank).toString();} })
+	.attr("text-anchor","middle")//字体尾部对齐
+    .attr("x", function(d,i) { 
+    	if (i%3==2 ){
+    	return xScale(d.date);} })
+    .attr("y", function(d,i) { 
+    	if (i%3==2 ){
+    		return yScaleRoot(d.Gloomhavencount);} })
+    .style("font", "4px")
+    .attr("dy", "+3.5")
+
+    svg3.append("g")
+      .append("circle")
+      .attr("cx", width+margin.right/2)
+      .attr("cy", height)
+      .attr("r", 10)
+
+    svg3.append("g")
+      .append("text")
+      .attr("class", "text")
+      .attr("x", width+margin.right/2)
+      .attr("y", height)
+      .text("rank")
+      .attr("class", "text")
+	  .attr("dx", "-8")
+	  .attr("dy", "+3")
+
+svg3.append("g")
+      .append("text")
+      .attr("class", "text")
+      .attr("x", width+margin.right/2)
+      .attr("y", height)
+      .text("BoardGameGeek Rank")
+      .attr("class", "text")
+	  .attr("dx", "-40")
+	  .attr("dy", "+30")
+	  .style("fill", "black")
+	  .style('font-weight', 'bold')
+
+
+
+
+/////////////////////////////////
+// SVG4
+///////////////////////////////////
+
+
+
+
+  var svg4 = d3.select("body").append("svg")
+  .attr("id","area4")
+  .attr("class", "svg4")  //把它归为xaxis这一类
+  .attr("class", "pagebreak")
+	    .attr("width", width + margin.left + margin.right)
+	    .attr("height", 1*(height + margin.top + margin.bottom+100))
+	  .append("g")
+	    .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+	    ;
+
+	// 3. Call the x axis in a group tag
+	svg4.append("g")
+	    .attr("class", "x axis")  //把它归为xaxis这一类
+	    .attr("transform", "translate(0," + height + ")")
+	    .call(d3.axisBottom(xScale).tickFormat(d3.timeFormat("%b,%y")));
+	
+	    //call的里面必须是函数，svg.append("g").call(axis) = axis(svg.append(g))，和group对象绑定
+
+	// 4. Call the y axis in a group tag
+	svg4.append("g")
+	    .attr("class", "y axis")
+	    .call(d3.axisLeft(yScaleLog).ticks(8)); // Create an axis component with d3.axisLeft
+	    
+
+	// 9. Append the path, bind the data, and call the line generator 
+	svg4.append("path") //path可以绘制任何图形
+	    .datum(data) // 10. Binds data to the line 
+	    .attr("class", "line") // Assign a class for styling 
+	    .attr("d", line1Log)
+	    .style("stroke", _colors(0)); 
+	svg4.append("text")
+		.attr("transform", "translate(" + (width+3) + "," + yScaleLog(data[data.length-1].Catancount) + ")")
+		.attr("dy", ".35em")
+		.attr("text-anchor", "start")
+		.style("fill", _colors(0))
+		.text("Catan");
+
+	svg4.append("path") //path可以绘制任何图形
+	    .datum(data) // 10. Binds data to the line 
+	    .attr("class", "line") // Assign a class for styling 
+	    .attr("d", line2Log) // d决定pen在画布上怎么走，line变量定义了
+		.style("stroke", _colors(1)); 
+	svg4.append("text")
+		.attr("transform", "translate(" + (width+3) + "," + yScaleLog(data[data.length-1].Dominioncount) + ")")
+		.attr("dy", ".35em")
+		.attr("text-anchor", "start")
+		.style("fill", _colors(1))
+		.text("Dominion");
+
+	svg4.append("path") 
+	    .datum(data) 
+	    .attr("class", "line") 
+	    .attr("d", line3Log)
+		.style("stroke", _colors(2));
+	svg4.append("text")
+		.attr("transform", "translate(" + (width+3) + "," + yScaleLog(data[data.length-1].Codenamescount) + ")")
+		.attr("dy", ".35em")
+		.attr("text-anchor", "start")
+		.style("fill", _colors(2))
+		.text("Codenames"); 
+
+	svg4.append("path") 
+	    .datum(data) 
+	    .attr("class", "line") 
+	    .attr("d", line4Log)
+	    .style("stroke", _colors(3));
+	svg4.append("text")
+		.attr("transform", "translate(" + (width+3) + "," + yScaleLog(data[data.length-1].TerraformingMarscount) + ")")
+		.attr("dy", ".35em")
+		.attr("text-anchor", "start")
+		.style("fill", _colors(3))
+		.text("Terraforming Mars");  
+
+	svg4.append("path") 
+	    .datum(data) 
+	    .attr("class", "line") 
+	    .attr("d", line5Log)
+	    .style("stroke", _colors(4)); 
+	svg4.append("text")
+		.attr("transform", "translate(" + (width+3) + "," + yScaleLog(data[data.length-1].Gloomhavencount) + ")")
+		.attr("dy", ".35em")
+		.attr("text-anchor", "start")
+		.style("fill", _colors(4))
+		.text("Gloomhaven");  
+
+	svg4.append("path") 
+	    .datum(data) 
+	    .attr("class", "line") 
+	    .attr("d", line6Log)
+	    .style("stroke", _colors(5));
+	svg4.append("text")
+		.attr("transform", "translate(" + (width+3) + "," + yScaleLog(data[data.length-1].MagicTheGatheringcount) + ")")
+		.attr("dy", ".35em")
+		.attr("text-anchor", "start")
+		.style("fill", _colors(5))
+		.text("Magic: The Gathering"); 	 
+
+	svg4.append("path") 
+	    .datum(data) 
+	    .attr("class", "line") 
+	    .attr("d", line7Log)
+	    .style("stroke", _colors(6));
+	svg4.append("text")
+		.attr("transform", "translate(" + (width+3) + "," + yScaleLog(data[data.length-1].Dixitcount) + ")")
+		.attr("dy", ".35em")
+		.attr("text-anchor", "start")
+		.style("fill", _colors(6))
+		.text("Dixit");  
+
+	svg4.append("path") 
+	    .datum(data) 
+	    .attr("class", "line") 
+	    .attr("d", line8Log)
+	    .style("stroke", _colors(7))
+	svg4.append("text")
+		.attr("transform", "translate(" + (width+3) + "," + yScaleLog(data[data.length-1].Monopolycount) + ")")
+		.attr("dy", ".35em")
+		.attr("text-anchor", "start")
+		.style("fill", _colors(7))
+		.text("Monopoly"); 
+
+	svg4.append("g")
+      .append("text")
+      .text("Num of Ratings")
+      .attr("transform","rotate(-90)")//text旋转-90°
+      .attr("text-anchor","middle")//字体尾部对齐
+      .attr("y",-60)//沿y轴平移一个字体的大小
+      .attr("x","-200")
+
+
+    svg4.append("g")
+      .append("text")
+      .text("Month")
+      .attr("text-anchor","middle")//字体尾部对齐
+      .attr("y",height+40)//沿y轴平移一个字体的大小
+      .attr("x",width/2)
+
+    svg4.append("g")
+      .append("text")
+      .text("Num of Ratings 2016-2020 with Rankings")
+      .attr("text-anchor","middle")//字体尾部对齐
+      .attr("y",-40)//沿y轴平移一个字体的大小
+      .attr("x",width/2+20)
+
+	svg4.selectAll(".dot")
+    .data(data)
+  	.enter().append("circle") // Uses the enter().append() method
+    .attr("class", "dot") // Assign a class for styling
+    .attr("cx", function(d,i) { 
+    	if (i%3==2 ){
+    	return xScale(d.date);} })
+    .attr("cy", function(d,i) { 
+    	if (i%3==2 ){
+    		return yScaleLog(d.Catancount);} })
+    .attr("r", function(d,i) { 
+    	if (i%3==2 ){
+    		return 10;} })
+    .style("fill", _colors(0))
+
+
+    svg4.selectAll(".text")
+    .data(data)
+  	.enter().append("text")
+  	.attr("class", "text")
+  	.text(function(d,i){
+  		if (i%3==2 ){
+    	return (d.Catanrank).toString();} })
+	.attr("text-anchor","middle")//字体尾部对齐
+    .attr("x", function(d,i) { 
+    	if (i%3==2 ){
+    	return xScale(d.date);} })
+    .attr("y", function(d,i) { 
+    	if (i%3==2 ){
+    		return yScaleLog(d.Catancount);} })
+    .style("font", "4px")
+    .attr("dy", "+3.5")
+
+
+
+	svg4.selectAll(".dot2")
+    .data(data)
+  	.enter().append("circle") // Uses the enter().append() method
+    .attr("class", "dot") // Assign a class for styling
+    .attr("cx", function(d,i) { 
+    	if (i%3==2 ){
+    	return xScale(d.date);} })
+    .attr("cy", function(d,i) { 
+    	if (i%3==2 ){
+    		return yScaleLog(d.Codenamescount);} })
+    .attr("r", function(d,i) { 
+    	if (i%3==2 ){
+    		return 10;} })
+    .style("fill", _colors(2))
+
+
+    svg4.selectAll(".text2")
+    .data(data)
+  	.enter().append("text")
+  	.attr("class", "text")
+  	.text(function(d,i){
+  		if (i%3==2 ){
+    	return (d.Codenamesrank).toString();} })
+	.attr("text-anchor","middle")//字体尾部对齐
+    .attr("x", function(d,i) { 
+    	if (i%3==2 ){
+    	return xScale(d.date);} })
+    .attr("y", function(d,i) { 
+    	if (i%3==2 ){
+    		return yScaleLog(d.Codenamescount);} })
+    .style("font", "4px")
+    .attr("dy", "+3.5")
+
+	svg4.selectAll(".dot3")
+    .data(data)
+  	.enter().append("circle") // Uses the enter().append() method
+    .attr("class", "dot") // Assign a class for styling
+    .attr("cx", function(d,i) { 
+    	if (i%3==2 ){
+    	return xScale(d.date);} })
+    .attr("cy", function(d,i) { 
+    	if (i%3==2 ){
+    		return yScaleLog(d.TerraformingMarscount);} })
+    .attr("r", function(d,i) { 
+    	if (i%3==2 ){
+    		return 10;} })
+    .style("fill", _colors(3))
+
+
+    svg4.selectAll(".text3")
+    .data(data)
+  	.enter().append("text")
+  	.attr("class", "text")
+  	.text(function(d,i){
+  		if (i%3==2 ){
+    	return (d.TerraformingMarsrank).toString();} })
+	.attr("text-anchor","middle")//字体尾部对齐
+    .attr("x", function(d,i) { 
+    	if (i%3==2 ){
+    	return xScale(d.date);} })
+    .attr("y", function(d,i) { 
+    	if (i%3==2 ){
+    		return yScaleLog(d.TerraformingMarscount);} })
+    .style("font", "4px")
+    .attr("dy", "+3.5")
+
+	svg4.selectAll(".dot4")
+    .data(data)
+  	.enter().append("circle") // Uses the enter().append() method
+    .attr("class", "dot") // Assign a class for styling
+    .attr("cx", function(d,i) { 
+    	if (i%3==2 ){
+    	return xScale(d.date);} })
+    .attr("cy", function(d,i) { 
+    	if (i%3==2 ){
+    		return yScaleLog(d.Gloomhavencount);} })
+    .attr("r", function(d,i) { 
+    	if (i%3==2 ){
+    		return 10;} })
+    .style("fill", _colors(4))
+
+    svg4.selectAll(".text4")
+    .data(data)
+  	.enter().append("text")
+  	.attr("class", "text")
+  	.text(function(d,i){
+  		if (i%3==2 ){
+    	return (d.Gloomhavenrank).toString();} })
+	.attr("text-anchor","middle")//字体尾部对齐
+    .attr("x", function(d,i) { 
+    	if (i%3==2 ){
+    	return xScale(d.date);} })
+    .attr("y", function(d,i) { 
+    	if (i%3==2 ){
+    		return yScaleLog(d.Gloomhavencount);} })
+    .style("font", "4px")
+    .attr("dy", "+3.5")
+
+    svg4.append("g")
+      .append("circle")
+      .attr("cx", width+margin.right/2)
+      .attr("cy", height)
+      .attr("r", 10)
+
+    svg4.append("g")
+      .append("text")
+      .attr("class", "text")
+      .attr("x", width+margin.right/2)
+      .attr("y", height)
+      .text("rank")
+      .attr("class", "text")
+	  .attr("dx", "-8")
+	  .attr("dy", "+3")
+
+svg4.append("g")
+      .append("text")
+      .attr("class", "text")
+      .attr("x", width+margin.right/2)
+      .attr("y", height)
+      .text("BoardGameGeek Rank")
+      .attr("class", "text")
+	  .attr("dx", "-40")
+	  .attr("dy", "+30")
+	  .style("fill", "black")
+	  .style('font-weight', 'bold')
+
+
+svg4.append("text")
+        .attr("transform", "translate(" + (width-200) + "," + (height+150) + ")")
+        .style("text-anchor", "middle")
+        .text("jlu428");
+
+
+
+
+
+
+      }
+      ).catch(function (error) {
+      console.log(error);
+
+    
+	
+
+
+
+
+
+
+
+
+    }); 
+	 
+
+</script>
+
+
+
+</body>
+
+
+
+</html>
